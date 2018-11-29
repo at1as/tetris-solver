@@ -45,16 +45,16 @@ module Pieces
     #     [[ nil , "X" , nil ],
     #      [ "X" , "X" , "X" ]],
     #
-    #     [[nil, "X"],
+    #     [["X", nil],
     #      ["X", "X"],
-    #      [nil, "X"]],
+    #      ["X", nil]],
     #
     #     [[ "X" , "X" , "X" ],
     #      [ nil , "X" , nil ]],
     #
-    #     [["X", nil],
+    #     [[nil, "X"],
     #      ["X", "X"],
-    #      ["X", nil]]
+    #      [nil, "X"]]
     #   ]
 
     clockwise_90  = piece.reverse.transpose
@@ -84,6 +84,31 @@ module Pieces
     shape.map do |row| 
       row.map do |el|
         el.nil? ? el : el.to_s.send(color)
+      end
+    end
+  end
+
+  def Pieces.color_all(board)
+    #
+    # Given board (2d array of single character strings):
+    #
+    #   [[ "o" , "o" ],
+    #    [ "o" , "o" ]]
+    #
+    # Return
+    #   Colored in pieces according to their value (see `Pieces.colored_in`)
+    # 
+    # For example a "z" on the board represents a tetromino_z
+    # Which `Pieces.tetromino_z` has marked as a 'yellow' piece
+    #
+    board.map do |row|
+      row.map do |val|
+        if val.nil?
+          val
+        else
+          color = eval("Pieces.tetromino_#{val.downcase}").color
+          val.send(color)
+        end
       end
     end
   end
@@ -139,8 +164,8 @@ module Pieces
       __method__,
       Pieces.swap(
         [
-          %w( j j j ),
-          %w( . j . )
+          %w( t t t ),
+          %w( . t . )
         ],
         ".",
         nil

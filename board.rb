@@ -22,4 +22,14 @@ class Board
       end
     end
   end
+
+  def merge_many_boards(other_boards)
+    other_boards.each do |brd|
+      merge_boards(brd)
+    end
+  end
+
+  def filled?
+    !@layout.flatten.any?(&:nil?)
+  end
 end

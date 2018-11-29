@@ -2,19 +2,92 @@ require_relative '../solver'
 require_relative '../matrix_helper'
 
 RSpec.describe Solver do
-  it "should work" do
-    #@x = 5
-    #@y = 8
-    #@piece_map = {
-    #  tetromino_i: 2,
-    #  tetromino_o: 2,
-    #  tetromino_t: 2,
-    #  tetromino_j: 1,
-    #  tetromino_l: 1,
-    #  tetromino_s: 1,
-    #  tetromino_z: 1,
+
+  it "should find a trivial solution" do 
+    x = 4
+    y = 1
+    piece_map = {
+      tetromino_i: 1
+    }
+
+    s = Solver.new(x, y, piece_map)
+    output_board = s.run.layout
+
+    expect(output_board).to eq([["i", "i", "i", "i"]])
+  end
+
+  it "should find simple solution" do
+    x = 5
+    y = 4
+    piece_map = {
+      tetromino_o: 2,
+      tetromino_i: 3
+    }
+
+    s = Solver.new(x, y, piece_map)
+    output_board = s.run
+
+    expect(output_board.layout).not_to be_nil 
+    expect(output_board.layout.flatten.select {|x| x == "o"}.count).to eq(8)
+    expect(output_board.layout.flatten.select {|x| x == "i"}.count).to eq(12)
     
-    s = Solver.new
+    # TODO: There are multiple valid solutions, such as the below
+    #       Need to test the validity of the piece shape beyond just the character count
+    #  [
+    #    ["o", "o", "i", "i", "i"],
+    #    ["o", "o", "i", "i", "i"],
+    #    ["o", "o", "i", "i", "i"],
+    #    ["o", "o", "i", "i", "i"]
+    #  ]
+  end
+
+  it "should not find solution to ill-posed problem" do
+    x = 2
+    y = 4
+    piece_map = { tetromino_o: 1 , tetromino_i: 1 }
+
+    s = Solver.new(x, y, piece_map)
+    output_board = s.run
+
+    expect(output_board).to eq(nil)
+  end
+
+  it "should find a complex solution (4x10)" do
+    x = 4
+    y = 10
+    piece_map = {
+      tetromino_i: 2,
+      tetromino_o: 2,
+      tetromino_t: 2,
+      tetromino_j: 0,
+      tetromino_l: 2,
+      tetromino_s: 1,
+      tetromino_z: 1,
+    }
+    
+    s = Solver.new(x, y, piece_map)
+    output_board = s.run
+
+    
+  end
+
+  it "should find a complex solution" do
+    x = 5
+    y = 8
+    piece_map = {
+      tetromino_i: 2,
+      tetromino_o: 2,
+      tetromino_t: 2,
+      tetromino_j: 1,
+      tetromino_l: 1,
+      tetromino_s: 1,
+      tetromino_z: 1
+    }
+    
+    s = Solver.new(x, y, piece_map)
+    output_board = s.run
+    puts "XYZ"
+
     boards  = s.all_possible_places_on_board(Pieces.tetromino_i)
     expect(boards.length).to eq(41)
 

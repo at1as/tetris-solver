@@ -1,28 +1,17 @@
 require_relative 'board'
 require_relative 'matrix_helper'
 require_relative 'pieces'
-require 'byebug'
+require_relative 'printer'
 
 class Solver
 
   attr_accessor :pieces
 
-  def initialize
-    #@x = 5
-    #@y = 8
-    #@piece_map = {
-    #  tetromino_i: 2,
-    #  tetromino_o: 2,
-    #  tetromino_t: 2,
-    #  tetromino_j: 1,
-    #  tetromino_l: 1,
-    #  tetromino_s: 1,
-    #  tetromino_z: 1,
-    #}
-    @x = 5
-    @y = 4
-    @piece_map = { tetromino_o: 2 , tetromino_i: 3 }
-    @pieces = []
+  def initialize(x, y, piece_map)
+    @x = x
+    @y = y
+    @piece_map = piece_map
+    @pieces    = []
 
     populate_piece_buffer
   end
@@ -48,7 +37,6 @@ class Solver
 
     board
   rescue
-    nil
   end
 
   
@@ -98,53 +86,124 @@ class Solver
 
     end
   end
-
+  
+  <<-OLDSOLUTION
   def solver_r(current_board, list_of_matricies, iterations = 0)
     puts iterations
+
+    combos = list_of_matricies.reduce { |z, acc| z.product(acc) }
     
-    while !list_of_matricies.length.zero?
-      list_of_non_colliding_matricies = find_non_colliding_solutions(current_board, list_of_matricies)
+    combos.each do |c|
+      next_board = current_board.clone
+      current_board.merge_many_boards(c)
 
-      next if list_of_non_colliding_matricies.any? { |piece_placements| piece_placements.empty? }
-      
-      next_piece_placements = list_of_non_colliding_matricies.first
-      next_piece_placements.each do |matrix|
-
-        # check if list_on_non_colliding_matricis is of length one
-        # check if current_board.imerge_board(matrix) has no conflicts
-        # if so, return
-        #next_board = current_board.merge_boards(matrix)
-        next_board = current_board.clone
-        next_board.merge_boards(matrix)
-
-
-        if list_of_non_colliding_matricies.length == 1
-          puts "SOLUTION@"
-          return next_board          
-        end
-
-        #next_board = current_board.merge_board(matrix)
-        return solver_r(next_board, list_of_non_colliding_matricies[1..-1], iterations + 1)
-      end
+      puts "SOLUTION" if current_board.filled?
+      return current_board
     end
   end
+  OLDSOLUTION
 
-  def solver_run
+  $solution = nil
+  $iter = 0
+
+  def solver_r(current_board, list_of_positions_per_piece, iterations = 0)
+    $iter = $iter + 1
+    puts "#{iterations} -> #{$iter}"
+    return if $solution
+    
+    valid_piece_placements = find_non_colliding_solutions(current_board, list_of_positions_per_piece)
+
+    valid_piece_placements.each_with_index do |piece_placement,idx|
+      next if $solution
+      piece_placement.lazy.each do |possible_solution|
+        next if $solution
+        next_board = Marshal.load(Marshal.dump(current_board))
+        #next_board = current_board.clone
+        next_board.merge_boards(possible_solution)
+
+        if next_board.filled?
+          #solved = true
+          $solution = next_board
+          #return next_board
+          break
+        else
+          solver_r(next_board, valid_piece_placements[idx+1..-1], iterations + 1)
+        end
+      end #.find { |x| x.filled? rescue false }
+      
+    end #.find { |x| x.respond_to? "filled?" && x.filled? }
+  end
+
+    #if current_board.filled?
+    #  puts "SOLUTION"
+    #  return current_board
+    #else
+    #  solns = find_non_colliding_solutions(current_board, list_of_matricies)
+
+      #return solns.map do |s|
+    #  solns.map do |s|
+    #    s.map do |m|
+    #      next_board = current_board.clone
+    #      next_board.merge_boards(m)
+
+     #     solver_r(next_board, solns - [s], iterations + 1)
+     #   end
+     # end
+    #end
+  
+    ###newsoln
+    #solns = find_non_colliding_solutions(current_board, list_of_matricies)
+    #solns.each do |mtx|
+    #  mtx.each do |m|
+    #    next_board = current_board.clone
+    #    next_board.merge_boards(m)
+
+        #return solver_r(next_board, list_of_non_colliding_matricies[1..-1], iterations + 1)
+    #    return solver_r(next_board, solns - [mtx], iterations + 1, solutions)
+    #  end
+    #end
+
+
+    ###END newsoln
+
+
+#    #while !list_of_matricies.length.zero?
+#    if !list_of_matricies.length.zero?
+#    #list_of_matricies.each do |mtx|
+#      list_of_non_colliding_matricies = find_non_colliding_solutions(current_board, list_of_matricies)
+#
+#      #next if list_of_non_colliding_matricies.any? { |piece_placements| piece_placements.empty? }
+#      #break if list_of_non_colliding_matricies.length == 0 
+#      return if list_of_non_colliding_matricies.length == 0 
+#      next_piece_placements = list_of_non_colliding_matricies.first
+#      next_piece_placements.each do |matrix|
+#
+#        # check if list_on_non_colliding_matricis is of length one
+#        # check if current_board.imerge_board(matrix) has no conflicts
+#        # if so, return
+#        #next_board = current_board.merge_boards(matrix)
+#        next_board = current_board.clone
+#        next_board.merge_boards(matrix)
+#
+#
+#        #if list_of_non_colliding_matricies.length == 1
+#        #  puts "SOLUTION@"
+#        #  return next_board          
+#        #end
+#        #if next_board.filled
+#
+#        #next_board = current_board.merge_board(matrix)
+#        return solver_r(next_board, list_of_non_colliding_matricies[1..-1], iterations + 1)
+#      end
+#    end
+  #end
+
+  def run
     board = Board.new(@x, @y)
     piece_position_map = all_pieces_all_possible_locations
 
     result = solver_r(board, piece_position_map, 0)
 
-    if result.nil?
-      puts "No valid solutions"
-    else
-      puts "Solution found!\n"
-
-      result.layout.each do |row|
-        puts "#{row}"
-      end
-        
-      result
-    end
+    Printer.solution($solution, board, @piece_map)
   end
 end
