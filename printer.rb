@@ -2,6 +2,14 @@ require 'colorize'
 
 module Printer 
 
+  def Printer.colorize(str)
+    # Remove/pad characters that interfere with the colored escape sequence
+    str.
+      gsub('"', "").
+      gsub( /\A\[/ ,  "\[ ").
+      gsub( /\]\Z/ , " \]")
+  end
+
   def Printer.header(board, pieces)
     puts ?\n
     puts "Board Size: #{board.size}"
@@ -16,7 +24,12 @@ module Printer
         puts "No solution found".yellow
       else
         puts "Solution found!".green
-        solution.layout.each { |r| puts r.to_s }
+        formatted_solution = Pieces.color_all(solution.layout)
+        formatted_solution.each do |row|
+          print "["
+          row.each { |c| print " #{c} " }
+          print "]\n"
+        end
     end
   end
 

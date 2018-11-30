@@ -134,6 +134,17 @@ module Pieces
     }
   end
 
+  def Pieces.types
+    #
+    # Return list of tetromino types. These are unlikely to change from:
+    #   [:i, :o, :t, :j, :l, :s, :z]
+    #
+    # However, this may change if 3-dimensional boards are supported, 
+    # depending on how it is implemented
+    #
+    Pieces.methods.grep(/tetromino/).map { |x| x.to_s.split("").last.to_sym }
+  end
+
 
   def Pieces.tetromino_i
     container.new(

@@ -55,7 +55,9 @@ class Solver
       end
     end
 
-    boards.reject(&:nil?)
+    boards.
+      reject(&:nil?).
+      select { |b| MatrixHelper.is_solveable_matrix(b.layout) }
   end
 
   def all_pieces_all_possible_locations

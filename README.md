@@ -19,7 +19,7 @@ All Talos Principle Sigil puzzles can be solved, however runtime is often ~30 mi
 
 ### TODO
 
-While solutions are computed quickly for small boards, the runtime becomes unaccepably slow with solutions of moderate difficulty:
+While solutions are computed quickly for small boards, the runtime becomes hilariously slow with solutions of moderate difficulty:
 
 #### Example
 ##### 4 x 10 Board on 2016 MacBook Pro 
@@ -39,6 +39,26 @@ total iterations: 8,744,888
 ["o", "o", "o", "o"]
 
 Finished in 39 minutes 42 seconds
+```
+
+#### Example
+##### 5 x 8 Board on 2016 MacBook Pro
+
+```
+solution depth:   9
+total iterations: 76,694,549
+
+["l", "l", "z", "z", "s"]
+["l", "z", "z", "s", "s"]
+["l", "z", "z", "s", "j"]
+["z", "z", "j", "j", "j"]
+["s", "s", "t", "t", "t"]
+["t", "s", "s", "t", "t"]
+["t", "t", "t", "t", "t"]
+["t", "t", "t", "t", "t"]
+.
+
+Finished in 425 minutes 36 seconds
 ```
 
 There are some optimizations that can be made:

@@ -43,7 +43,7 @@ module MatrixHelper
 
   def MatrixHelper.remove_overlap(matrix, list_of_matricies)
     #
-    # Given a 2D matrix  and a list containing a list of matrix positions for each type of piece,
+    # Given a 2D matrix and a list containing a list of matrix positions for each type of piece,
     # remove all matricies that intersect with the `matrix`
     #
     # Given:
@@ -62,7 +62,6 @@ module MatrixHelper
     #   ]
     #
     current_occupied_spaces   = MatrixHelper.occupied_spaces(matrix.layout)
-    #current_occupied_spaces   = MatrixHelper.occupied_spaces(matrix)
     non_conflicting_matricies = []
 
     list_of_matricies.each_with_index do |matricies_for_piece, idx|
@@ -72,12 +71,88 @@ module MatrixHelper
         new_occupied_spaces = MatrixHelper.occupied_spaces(matrix_for_piece.layout)
 
         if (new_occupied_spaces & current_occupied_spaces).length.zero?
-          non_conflicting_matricies[idx] << matrix_for_piece
+          (non_conflicting_matricies[idx] << matrix_for_piece) if MatrixHelper.is_solveable_matrix(matrix_for_piece.layout)
+          #non_conflicting_matricies[idx] << matrix_for_piece
         end
       end
     end
 
     non_conflicting_matricies
+  end
+
+  def MatrixHelper.neighbors(matrix, r_idx, c_idx)
+    #
+    # Given a Matrix
+    #   [
+    #     [ A  B  C ]
+    #     [ H  X  D ]
+    #     [ G  F  E ]
+    #   ]   
+    #
+    # And coordinates (r_idx, c_idx)
+    #
+    # Return a list of the neighbors for the piece at (r_idx, c_idx)
+    #
+    # Ex. Given (1, 1) for the above matrix, will return [B, F, H, D]
+    #
+    # This method assumes that matrix has rows of equal size (due to `max_cols` below)
+    # It also assumes that at least one row is contained (see `upper_neighbor` constraints)
+    #
+
+    max_rows = matrix.length
+    max_cols = matrix[0].length
+
+    upper_neighbor =  if r_idx == 0
+                        :out_of_bounds
+                      else
+                        matrix[r_idx - 1][c_idx]
+                      end
+
+    lower_neighbor =  if r_idx == (max_rows - 1)
+                        :out_of_bounds
+                      else
+                        matrix[r_idx + 1][c_idx]
+                      end
+
+    left_neighbor =   if c_idx == 0
+                        :out_of_bounds
+                      else
+                        matrix[r_idx][c_idx - 1]
+                      end
+
+    right_neighbor =  if c_idx == (max_cols - 1)
+                        :out_of_bounds
+                      else
+                        matrix[r_idx][c_idx + 1]
+                      end
+    
+    [upper_neighbor, lower_neighbor, left_neighbor, right_neighbor]
+  end
+
+  def MatrixHelper.is_solveable_matrix(matrix)
+    #
+    # Given a 2D Matrix, determine if can be solved given any pieces
+    # Cases in which it would not be solveable are where isolated islands of 3 or less pieces form
+    # All pieces are 4 characters large, so nothing would be able to fill the void
+    #
+    # TODO:
+    #   This solves the simple case (a piece that is fully encased)
+    #   The next step is to look for at minimum 4 connected pieces
+    #   And then after that, to do the search knowing which pieces are actually available
+    #
+    matrix.each_with_index do |row, r_idx|
+      row.each_with_index do |col, c_idx|
+        next unless matrix[r_idx][c_idx].nil?
+
+        neighbors = MatrixHelper.neighbors(matrix, r_idx, c_idx)
+        empty_neighbors = neighbors.select(&:nil?).length
+
+        next         if empty_neighbors > 1
+        return false if empty_neighbors == 0
+      end
+    end
+
+    true
   end
 
 end

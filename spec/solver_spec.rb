@@ -52,7 +52,7 @@ RSpec.describe Solver do
     expect(output_board).to eq(nil)
   end
 
-  it "should find a complex solution (4x10)" do
+  it "should find a moderately complex solution (4x10)" do
     x = 4
     y = 10
     piece_map = {
@@ -71,7 +71,7 @@ RSpec.describe Solver do
     
   end
 
-  it "should find a complex solution" do
+  it "should find a quite complex solution (5x10)" do
     x = 5
     y = 8
     piece_map = {
