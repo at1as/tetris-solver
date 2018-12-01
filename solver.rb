@@ -12,8 +12,19 @@ class Solver
     @y = y
     @piece_map = piece_map
     @pieces    = []
+    @solved    = false
+    @solution  = nil
+    @iter      = 0
 
     populate_piece_buffer
+  end
+
+  def enough_pieces_for_solution?
+    piece_blocks = @piece_map.values.reduce(:+) * 4  # assume always 4 blocks per piece
+    grid_blocks  = @x * @y
+    block_delta  = piece_blocks - grid_blocks
+
+    block_delta >= 0 && (block_delta % 4 == 0) ? true : false
   end
 
   def populate_piece_buffer
@@ -72,32 +83,31 @@ class Solver
   end
 
   def find_non_colliding_solutions(initial_frame, possible_matricies_per_piece)
-    valid_matricies_per_piece = MatrixHelper.remove_overlap(initial_frame, possible_matricies_per_piece)
+    MatrixHelper.remove_overlap(initial_frame, possible_matricies_per_piece)
   end
 
-  $solution = nil
-  $iter = 0
-
-  def solver_r(current_board, list_of_positions_per_piece, iterations = 0)
-    $iter = $iter + 1
-    puts "#{iterations} -> #{$iter}"
-    return if $solution
+  $debug = true
+  def solve(current_board, list_of_positions_per_piece, depth = 0)
+    @iter = @iter + 1
+    puts "#{depth} -> #{@iter}" if $debug
+    return if @solved
     
     valid_piece_placements = find_non_colliding_solutions(current_board, list_of_positions_per_piece)
 
     valid_piece_placements.each_with_index do |piece_placement,idx|
-      return if $solution
+      return if @solved
       piece_placement.lazy.each do |possible_solution|
-        return if $solution
+        return if @solved
         next_board = Marshal.load(Marshal.dump(current_board))
         #next_board = current_board.clone
         next_board.merge_boards(possible_solution)
 
         if next_board.filled?
-          $solution = next_board
+          @solved   = true
+          @solution = next_board
           break
         else
-          solver_r(next_board, valid_piece_placements[idx+1..-1], iterations + 1)
+          solve(next_board, valid_piece_placements[idx+1..-1], depth + 1)
         end
       end
     end
@@ -107,8 +117,14 @@ class Solver
     board = Board.new(@x, @y)
     piece_position_map = all_pieces_all_possible_locations
 
-    result = solver_r(board, piece_position_map, 0)
+    unless enough_pieces_for_solution?
+      Printer.solution(nil, board, @piece_map)
+      return
+    end
 
-    Printer.solution($solution, board, @piece_map)
+    result = solve(board, piece_position_map, 0)
+
+    @solved = false 
+    Printer.solution(@solution, board, @piece_map)
   end
 end

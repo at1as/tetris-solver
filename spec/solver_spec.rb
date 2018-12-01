@@ -86,7 +86,6 @@ RSpec.describe Solver do
     
     s = Solver.new(x, y, piece_map)
     output_board = s.run
-    puts "XYZ"
 
     boards  = s.all_possible_places_on_board(Pieces.tetromino_i)
     expect(boards.length).to eq(41)

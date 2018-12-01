@@ -69,8 +69,37 @@ RSpec.describe MatrixHelper do
     expect(res.length).to eq(40)
   end
 
-  # TODO: j piece 
-  # TODO: l piece
+  it "should return only valid matricies for 'j' piece" do
+    j_piece = Pieces.tetromino_j
+    x = 5
+    y = 5
+    s = Solver.new(5, 5, {})
+    res = s.all_possible_places_on_board(j_piece)
+  
+    # Without removals, should be 48 (unsymetric piece can be shifted 3 times per row, 4 columns)
+    # => 3 per row * 4 cols * 4 orientations = 48
+    #
+    # However 4 orientations are invalid (each corner has one invalid orientation)
+    # => 44 valid orientations
+    #
+    expect(res.length).to eq(44)
+  end
+
+  it "should return only valid matricies for 'l' piece" do
+    l_piece = Pieces.tetromino_l
+    x = 5
+    y = 5
+    s = Solver.new(5, 5, {})
+    res = s.all_possible_places_on_board(l_piece)
+  
+    # Without removals, should be 48 (unsymetric piece can be shifted 3 times per row, 4 columns)
+    # => 3 per row * 4 cols * 4 orientations = 48
+    #
+    # However 4 orientations are invalid (each corner has one invalid orientation)
+    # => 44 valid orientations
+    #
+    expect(res.length).to eq(44)
+  end
 
   it "should return only valid matricies for 's' piece" do
     s_piece = Pieces.tetromino_s

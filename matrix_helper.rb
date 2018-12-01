@@ -103,30 +103,71 @@ module MatrixHelper
     max_cols = matrix[0].length
 
     upper_neighbor =  if r_idx == 0
-                        :out_of_bounds
+                        {status: :out_of_bounds, row: r_idx - 1, col: c_idx, value: nil}
                       else
-                        matrix[r_idx - 1][c_idx]
+                        {status: :in_bounds, row: r_idx - 1, col: c_idx, value: matrix[r_idx - 1][c_idx]}
                       end
 
     lower_neighbor =  if r_idx == (max_rows - 1)
-                        :out_of_bounds
+                        {status: :out_of_bounds, row: r_idx + 1, col: c_idx, value: nil}
                       else
-                        matrix[r_idx + 1][c_idx]
+                        {status: :in_bounds, row: r_idx + 1, col: c_idx, value: matrix[r_idx + 1][c_idx]}
                       end
 
     left_neighbor =   if c_idx == 0
-                        :out_of_bounds
+                        {status: :out_of_bounds, row: r_idx, col: c_idx - 1, value: nil}
                       else
-                        matrix[r_idx][c_idx - 1]
+                        {status: :in_bounds, row: r_idx, col: c_idx - 1, value: matrix[r_idx][c_idx - 1]}
                       end
 
     right_neighbor =  if c_idx == (max_cols - 1)
-                        :out_of_bounds
+                        {status: :out_of_bounds, row: r_idx, col: c_idx + 1, value: nil}
                       else
-                        matrix[r_idx][c_idx + 1]
+                        {status: :in_bounds, row: r_idx, col: c_idx + 1, value: matrix[r_idx][c_idx + 1]}
                       end
     
     [upper_neighbor, lower_neighbor, left_neighbor, right_neighbor]
+  end
+
+  def MatrixHelper.empty_neighbors(neighbors)
+    #
+    # Given a list of neighbors:
+    #   [ 
+    #     { status: :in_bounds, row: 1, col: 1, value: "X" }, 
+    #     ... 
+    #   ]
+    #
+    # Return all elements that are :in_bounds and nil ("empty neighbors")
+    #
+
+    neighbors.select { |n| n[:status] == :in_bounds && n[:value].nil? }
+  end
+  
+  def MatrixHelper.chained_neighbors(matrix, r_idx, c_idx)
+    #
+    # Given a matrix and target co-ordinates
+    # 
+    # Return :insufficent if it is in a group of 1, 2, or 3 two completely enclosed squares
+    # These are invalid as all tetronimo pieces are 4 blocks large
+    #
+
+    neighbors       = MatrixHelper.neighbors(matrix, r_idx, c_idx)
+    empty_neighbors = MatrixHelper.empty_neighbors(neighbors)
+
+    connected_block_size = empty_neighbors.inject(0) do |sum, n|
+      sum + MatrixHelper.empty_neighbors(MatrixHelper.neighbors(matrix, n[:row], n[:col])).length
+    end
+
+    case
+      when empty_neighbors.length > 2
+        :sufficent
+      when empty_neighbors.length == 2
+        return (connected_block_size <= 2 ? :insufficient : :sufficient)
+      when empty_neighbors.length == 1
+        return (connected_block_size == 1 ? :insufficient : :sufficient)
+      else
+        :insufficient
+    end
   end
 
   def MatrixHelper.is_solveable_matrix(matrix)
@@ -136,19 +177,17 @@ module MatrixHelper
     # All pieces are 4 characters large, so nothing would be able to fill the void
     #
     # TODO:
-    #   This solves the simple case (a piece that is fully encased)
-    #   The next step is to look for at minimum 4 connected pieces
+    #   This solves the simplest case (a piece that is fully encased)
+    #   And the second simplest case (two fully encased pieces)
+    #   And the next case (three fully encased pieces)
     #   And then after that, to do the search knowing which pieces are actually available
     #
+
     matrix.each_with_index do |row, r_idx|
       row.each_with_index do |col, c_idx|
         next unless matrix[r_idx][c_idx].nil?
 
-        neighbors = MatrixHelper.neighbors(matrix, r_idx, c_idx)
-        empty_neighbors = neighbors.select(&:nil?).length
-
-        next         if empty_neighbors > 1
-        return false if empty_neighbors == 0
+        return false if MatrixHelper.chained_neighbors(matrix, r_idx, c_idx) == :insufficient
       end
     end
 
